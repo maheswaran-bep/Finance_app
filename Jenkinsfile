@@ -41,31 +41,39 @@ pipeline {
             }
         }
 
-        stage('Backend Tests') {
-            steps {
-                sh '''
+        
+stage('Backend Tests') {
+    steps {
+        sh '''
+            set -eu
+
+            if [ -d backend/tests ] && \
+               find backend/tests -type f \
+                 \\( -name 'test_*.py' -o -name '*_test.py' \\) \
+                 | grep -q .; then
+
+                docker compose \
+                  -p "$COMPOSE_PROJECT_NAME" \
+                  -f "$COMPOSE_FILE" build backend
+
+                docker compose \
+                  -p "$COMPOSE_PROJECT_NAME" \
+                  -f "$COMPOSE_FILE" run \
+                  --rm --no-deps \
+                  --entrypoint sh \
+                  backend -c '
                     set -eu
+                    ln -s /usr/src/app /tmp/backend
+                    cd /usr/src/app
+                    PYTHONPATH=/tmp python -m pytest tests -q
+                  '
+            else
+                echo "No pytest test files found; skipping tests."
+            fi
+        '''
+    }
+}
 
-                    if [ -d backend/tests ] && \
-                       find backend/tests -type f \
-                         \\( -name 'test_*.py' -o -name '*_test.py' \\) \
-                         | grep -q .; then
-
-                        docker compose \
-                          -p "$COMPOSE_PROJECT_NAME" \
-                          -f "$COMPOSE_FILE" build backend
-
-                        docker compose \
-                          -p "$COMPOSE_PROJECT_NAME" \
-                          -f "$COMPOSE_FILE" run \
-                          --rm --no-deps backend \
-                          python -m pytest tests -q
-                    else
-                        echo "No pytest test files found; skipping tests."
-                    fi
-                '''
-            }
-        }
 
         stage('Build Images') {
             steps {
