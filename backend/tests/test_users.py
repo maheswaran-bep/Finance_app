@@ -23,10 +23,21 @@ def test_register_user():
     assert response.json()["msg"] == "register successfuly"
 
 
-def test_reset_password():
+
+def test_reset_password(monkeypatch):
     email_data = {"Email": "test@example.com"}
 
-    response = client.post("/users/reset_password", json=email_data)
+    # Mock email delivery so the test doesn't connect to Gmail.
+    monkeypatch.setattr(
+        "backend.core.forgot_pass.send_email",
+        lambda *args, **kwargs: None,
+    )
+
+    response = client.post(
+        "/users/reset_password",
+        json=email_data,
+    )
 
     assert response.status_code == 200
     assert "message" in response.json()
+
