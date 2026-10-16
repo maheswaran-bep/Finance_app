@@ -1,4 +1,6 @@
 
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 from backend.routers.users import router
 
@@ -6,10 +8,12 @@ client = TestClient(router)
 
 
 def test_register_user():
+    unique_id = int(uuid4().int % 2_000_000_000) + 1
+
     user_data = {
-        "id_": 123,
-        "username": "test_user",
-        "email": "test@example.com",
+        "id_": unique_id,
+        "username": f"test_user_{unique_id}",
+        "email": f"test_{unique_id}@example.com",
         "password": "testpassword",
     }
 
