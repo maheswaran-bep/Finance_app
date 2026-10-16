@@ -1,11 +1,7 @@
-FROM mysql:latest
+FROM mysql:8.4
 
 ENV MYSQL_ROOT_PASSWORD=root
 
-COPY ./db_user.sql  ./docker-entrypoint-initdb.d/
+COPY db_user.sql /docker-entrypoint-initdb.d/01-db_user.sql
 
-RUN pip3 install pymysql
-
-EXPOSE 3456
-
-CMD ["mysqld"]
+EXPOSE 3306
